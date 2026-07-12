@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from collections import deque
 
 # Configuração da página para o modo estendido (melhor visualização em tablets)
@@ -73,7 +72,7 @@ if len(historico) > 0:
 
     st.divider()
 
-    # --- CONSTRUÇÃO DO GRÁFICO ---
+    # --- CONSTRUÇÃO DO GRÁFICO NATIVO (À PROVA DE ERROS) ---
     st.markdown("### 📈 Gráfico de Tendência da Porcentagem")
     if len(historico) >= 5:
         dados_grafico = []
@@ -84,16 +83,14 @@ if len(historico) > 0:
         for i in range(tamanho_janela, len(lista_velas) + 1):
             janela = lista_velas[i-tamanho_janela:i]
             pct = (sum(1 for v in janela if v >= 2.0) / tamanho_janela) * 100
-            dados_grafico.append({"Rodada": i, "Porcentagem_2x": pct})
+            dados_grafico.append(pct)
 
-        df = pd.DataFrame(dados_grafico)
-        fig = px.line(df, x="Rodada", y="Porcentagem_2x", title="Evolução da Força do Mercado", markers=True)
+        # Transforma em formato aceito pelo gráfico nativo do Streamlit
+        df = pd.DataFrame(dados_grafico, columns=["Força 2x (%)"])
         
-        # Linhas de meta no gráfico
-        fig.add_hline(y=40, line_dash="dash", line_color="green", annotation_text="ZONA DE ENTRADA (Mercado pagou pouco)")
-        fig.add_hline(y=60, line_dash="dash", line_color="red", annotation_text="ZONA DE PERIGO (Mercado pagou muito)")
-        fig.update_yaxes(range=[0, 101])
-        st.plotly_chart(fig, use_container_width=True)
+        # Desenha o gráfico na tela de forma limpa e rápida
+        st.line_chart(df)
+        st.caption("Alvo ideal: Entre quando a linha estiver abaixo de 40% (indica mercado devendo velas altas).")
     else:
         st.info("Insira pelo menos 5 rodadas para o gráfico começar a desenhar a linha de tendência.")
         
