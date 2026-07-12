@@ -12,7 +12,7 @@ if "historico" not in st.session_state:
 historico = st.session_state.historico
 
 # Títulos da Interface
-st.title("📊 Painel Estatístico Aviator - Modo Manual")
+st.title("📊 Radar Estatístico Aviator - Alvo 2.00x a 2.50x")
 st.write("Insira os resultados na barra lateral para calcular as porcentagens e tendências em tempo real.")
 
 st.divider()
@@ -55,10 +55,10 @@ if len(historico) > 0:
         else:
             break
 
-    # --- SINAL DE ALERTA DINÂMICO ---
+    # --- SINAL DE ALERTA DINÂMICO (CALIBRADO PARA 2X - 2.50X) ---
     st.markdown("### 🚨 Status do Sinal")
     if reds_seguidos >= 4 and porcentagem_atual < 40:
-        st.error(f"🔥 **ALERTA DE ENTRADA DISPARADO!** \n\n Sequência perigosa de {reds_seguidos} REDS seguidos. Força recente de 2x+: {porcentagem_atual:.1f}%. Alta probabilidade matemática de correção. Entre buscando acima de 2.00x!")
+        st.error(f"🔥 **ALERTA DE ENTRADA DISPARADO!** \n\n Sequência perigosa de {reds_seguidos} REDS seguidos. Força recente de 2x+: {porcentagem_atual:.1f}%.\n\n🎯 **ESTRATÉGIA EXATA:** Entre na próxima rodada buscando o saque entre **2.00x e 2.50x** no máximo! Não tente segurar além disso para garantir o seu green na correção.")
     else:
         st.warning(f"⏳ **Aguardando padrão mínimo:** {reds_seguidos} reds seguidos. Força recente do mercado: {porcentagem_atual:.1f}%. Não entre agora.")
 
@@ -72,7 +72,7 @@ if len(historico) > 0:
 
     st.divider()
 
-    # --- CONSTRUÇÃO DO GRÁFICO NATIVO (À PROVA DE ERROS) ---
+    # --- CONSTRUÇÃO DO GRÁFICO COM LINHAS DE REFERÊNCIA GABIARRADAS ---
     st.markdown("### 📈 Gráfico de Tendência da Porcentagem")
     if len(historico) >= 5:
         dados_grafico = []
@@ -83,14 +83,20 @@ if len(historico) > 0:
         for i in range(tamanho_janela, len(lista_velas) + 1):
             janela = lista_velas[i-tamanho_janela:i]
             pct = (sum(1 for v in janela if v >= 2.0) / tamanho_janela) * 100
-            dados_grafico.append(pct)
+            
+            # Adicionamos os valores fixos 40 e 60 para criar as linhas guias na tela
+            dados_grafico.append({
+                "Força do Mercado (%)": pct,
+                "Zona de Entrada (40%)": 40.0,
+                "Zona de Perigo (60%)": 60.0
+            })
 
-        # Transforma em formato aceito pelo gráfico nativo do Streamlit
-        df = pd.DataFrame(dados_grafico, columns=["Força 2x (%)"])
+        # Transforma os dados em tabela para o Streamlit desenhar
+        df = pd.DataFrame(dados_grafico)
         
-        # Desenha o gráfico na tela de forma limpa e rápida
-        st.line_chart(df)
-        st.caption("Alvo ideal: Entre quando a linha estiver abaixo de 40% (indica mercado devendo velas altas).")
+        # Desenha o gráfico com as 3 linhas juntas
+        st.line_chart(df, y=["Força do Mercado (%)", "Zona de Entrada (40%)", "Zona de Perigo (60%)"])
+        st.caption("💡 **Como ler o gráfico:** Entre quando a linha principal (azul) cair abaixo da linha de Entrada (40%). Fique de fora se ela subir acima da linha de Perigo (60%).")
     else:
         st.info("Insira pelo menos 5 rodadas para o gráfico começar a desenhar a linha de tendência.")
         
