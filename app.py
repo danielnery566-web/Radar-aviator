@@ -3,7 +3,7 @@ import pandas as pd
 from collections import deque
 
 # Configuração da página para o modo estendido (melhor para tablets)
-st.set_page_config(page_title="Radar Premium Aviator", layout="wide")
+st.set_page_config(page_title="Radar Seguro Aviator", layout="wide")
 
 # Inicializa a memória RAM do site para guardar até 100 rodadas
 if "historico" not in st.session_state:
@@ -12,8 +12,8 @@ if "historico" not in st.session_state:
 historico = st.session_state.historico
 
 # Títulos da Interface
-st.title("🎯 Radar Pro - Foco em 2.00x & Probabilidade Rosa")
-st.write("Prioridade máxima em lucros seguros com termômetro para alvos longos.")
+st.title("🎯 Radar Seguro - Foco 2.00x (3 REDs) & Probabilidade 50x+")
+st.write("Filtro calibrado para maior proteção da banca e monitoramento de super bônus.")
 
 st.divider()
 
@@ -54,68 +54,60 @@ if len(historico) > 0:
         else:
             break
 
-    # 3. Mapeamento de bloco curto (Últimas 6 rodadas)
-    ultimas_6 = list(historico)[-6:]
-    reds_na_janela = sum(1 for v in ultimas_6 if v < 2.0)
-
-    # 4. Cálculo da Seca para Vela Rosa (>= 10.0x)
-    rodadas_sem_rosa = 0
+    # 3. Cálculo da Seca para Super Vela (>= 10.0x como referência de retenção)
+    rodadas_sem_alta = 0
     for v in reversed(list(historico)):
         if v < 10.0:
-            rodadas_sem_rosa += 1
+            rodadas_sem_alta += 1
         else:
             break
 
-    # 5. Cálculo Dinâmico da Porcentagem de Chance da Vela Rosa
-    if rodadas_sem_rosa <= 15:
-        chance_rosa = 10.0 + (rodadas_sem_rosa * 2)  # Entre 10% e 40%
-    elif rodadas_sem_rosa <= 30:
-        chance_rosa = 40.0 + (rodadas_sem_rosa - 15) * 2.5  # Entre 40% e 77.5%
+    # 4. Cálculo Dinâmico da Porcentagem de Chance da Vela Insana (50.00x+)
+    if rodadas_sem_alta <= 20:
+        chance_50x = 5.0 + (rodadas_sem_alta * 1.5)
+    elif rodadas_sem_alta <= 45:
+        chance_50x = 35.0 + (rodadas_sem_alta - 20) * 1.8
     else:
-        # Acima de 30 rodadas sem vir nada alto, a probabilidade dispara rumo ao limite matemático
-        chance_rosa = min(95.0, 77.5 + (rodadas_sem_rosa - 30) * 1.5)
+        chance_50x = min(98.0, 80.0 + (rodadas_sem_alta - 45) * 1.0)
 
-    # --- SINAL 1: PRIORIDADE MÁXIMA (ALVO 2.00x) ---
-    st.markdown("### 🟢 PRIORIDADE: Sinalizador Alvo 2.00x (Lucro Seguro)")
+    # --- SINAL 1: PRIORIDADE PROTEGIDA (ALVO 2.00x) ---
+    st.markdown("### 🟢 PRIORIDADE: Sinalizador Alvo 2.00x (Gatilho Seguro)")
     
-    if (reds_seguidos >= 3) or (reds_na_janela >= 4 and len(historico) >= 6):
-        if porcentagem_atual <= 45.0:
-            st.error(
-                f"🔥 **SINAL CONFIRMADO PARA 2.00x!** \n\n"
-                f"Saturação de mercado detectada: **{reds_seguidos} REDs seguidos**. Força recente: **{porcentagem_atual:.1f}%**.\n\n"
-                f"🎯 **AÇÃO:** Faça sua entrada com o Auto-Saque programado em **exatamente 2.00x**."
-            )
-        else:
-            st.warning("⏳ **Filtro Ativado:** A sequência de REDs bateu, mas a força geral do jogo ainda está alta ({porcentagem_atual:.1f}%). Aguarde esfriar mais um pouco para evitar falsos sinais.")
+    # Voltamos para 3 REDs conforme sua excelente análise de segurança
+    if reds_seguidos >= 3 and porcentagem_atual <= 50.0:
+        st.error(
+            f"🔥 **SINAL ATIVO: MOMENTO DE ENTRADA SEGURO!** \n\n"
+            f"O mercado bateu o filtro de proteção: **{reds_seguidos} REDs seguidos**. Força atual: **{porcentagem_atual:.1f}%**.\n\n"
+            f"🎯 **AÇÃO:** Faça sua entrada buscando a saída em **2.00x** no Auto-Saque!"
+        )
     else:
-        st.warning(f"⏳ **Monitorando Padrão de 2x...** (Reds atuais: {reds_seguidos} | Concentração curta: {reds_na_janela}/6)")
+        st.warning(f"⏳ **Monitorando Padrão de 2x...** (Reds atuais: {reds_seguidos}/3 | Força do mercado: {porcentagem_atual:.1f}%)")
 
     st.divider()
 
-    # --- SINAL 2: TERMÔMETRO DE VELA ROSA (20.00x+) ---
-    st.markdown("### 🌸 Radar de Probabilidade: Vela Rosa (20x+)")
+    # --- SINAL 2: TERMÔMETRO DE VELA INSANA (50.00x+) ---
+    st.markdown("### 🌌 Radar de Probabilidade: Vela Insana (50x+)")
     
-    # Exibe a porcentagem em um formato visual de progresso
-    st.write(f"📊 **Cálculo de Tendência Atual:** {chance_rosa:.1f}% de probabilidade de liberação de vela alta.")
-    st.progress(int(chance_rosa) / 100)
+    st.write(f"📊 **Cálculo de Janela de Distribuição:** {chance_50x:.1f}% de chance matemática para multiplicadores extremos.")
+    st.progress(int(chance_50x) / 100)
 
-    if chance_rosa >= 80.0:
+    if chance_50x >= 85.0:
         st.info(
-            f"🚀 **ALERTA DE ALTA PROBABILIDADE ({chance_rosa:.1f}%)** \n\n"
-            f"O jogo acumulou **{rodadas_sem_rosa} rodadas de seca** absoluta de velas altas.\n\n"
-            f"🎯 **AÇÃO SECUNDÁRIA:** Quando você for fazer a entrada do sinal de 2x (acima), coloque uma moeda mínima na 'Aposta 2' da Betano e tente arrastar ela até **20.00x**!"
+            f"🚀 **ALERTA DE MULTIPLICADOR EXTREMO ({chance_50x:.1f}%)** \n\n"
+            f"O sistema detectou uma seca severa de **{rodadas_sem_alta} rodadas** sem payouts expressivos.\n\n"
+            f"🎯 **DICA:** Mantenha a aposta principal em 2x. Na segunda aposta (com valor mínimo), tente deixar subir, pois a janela estatística para super velas de 50x+ está aberta!"
         )
     else:
-        st.success(f"⏳ **Estatística da Rosa:** Algoritmo em fase de acumulação de banca. Rodadas desde a última vela alta: {rodadas_sem_rosa}. Aguarde o termômetro passar de 80%.")
+        st.success(f"⏳ **Estatística 50x+:** Ciclo padrão de acumulação. Rodadas desde o último sinal expressivo: {rodadas_sem_alta}. O termômetro vai subir conforme o jogo segurar o prêmio.")
 
     st.divider()
 
     # --- QUADROS DE INFORMAÇÃO RÁPIDA ---
-    st.markdown("### 📊 Estatísticas Gerais")
+    st.markdown("### 📊 Indicadores em Tempo Real")
     col1, col2, col3 = st.columns(3)
-    col1.metric("Termômetro do Jogo (Força)", f"{porcentagem_atual:.1f}%")
+    col1.metric("Força Recente (Janela 20)", f"{porcentagem_atual:.1f}%")
     col2.metric("Reds em Sequência", f"{reds_seguidos}")
-    col3.metric("Rodadas sem Vela Alta", f"{rodadas_sem_rosa}")
+    col3.metric("Rodadas de Seca Alta", f"{rodadas_sem_alta}")
 
     st.divider()
     
@@ -124,4 +116,4 @@ if len(historico) > 0:
     st.text(str(list(historico)[-12:])[1:-1] + "x")
     
 else:
-    st.info("👋 Painel Inteligente Pronto! Alimente a barra lateral com os números da Betano e veja o termômetro da vela rosa subir em tempo real.")
+    st.info("👋 Painel Atualizado! Digite as velas da Betano na barra lateral para acompanhar o filtro de 3 REDs e o medidor de 50x+.")
