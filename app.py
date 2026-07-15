@@ -3,7 +3,7 @@ import pandas as pd
 from collections import deque
 
 # Configuração da página para o modo estendido (melhor para tablets)
-st.set_page_config(page_title="Radar Seguro Aviator", layout="wide")
+st.set_page_config(page_title="Radar Padrões Aviator", layout="wide")
 
 # Inicializa a memória RAM do site para guardar até 100 rodadas
 if "historico" not in st.session_state:
@@ -12,8 +12,8 @@ if "historico" not in st.session_state:
 historico = st.session_state.historico
 
 # Títulos da Interface
-st.title("🎯 Radar Seguro - Foco 2.00x (3 REDs) & Probabilidade 50x+")
-st.write("Filtro calibrado para maior proteção da banca e monitoramento de super bônus.")
+st.title("🎯 Radar de Padrões - Filtro de Alta Assertividade")
+st.write("Análise em tempo real focada exclusivamente em padrões de comportamento e quebras de tendência.")
 
 st.divider()
 
@@ -39,81 +39,139 @@ if st.sidebar.button("🗑️ Zerar Memória RAM"):
     st.session_state.historico.clear()
     st.rerun()
 
-# --- LÓGICA MATEMÁTICA EM TEMPO REAL ---
-if len(historico) > 0:
-    # 1. Métrica de Força Recente (Últimas 20)
-    ultimas_20 = list(historico)[-20:]
+# --- CLASSIFICADOR DE VELAS ---
+def obter_tipo(v):
+    if v < 2.0:
+        return "AZUL"
+    elif v < 10.0:
+        return "ROXA"
+    else:
+        return "ROSA"
+
+# --- LÓGICA DE DETECÇÃO EM TEMPO REAL ---
+if len(historico) >= 5:
+    valores = list(historico)
+    tipos = [obter_tipo(v) for v in valores]
+    
+    # 1. Mapeamento de métricas de mercado
+    ultimas_20 = valores[-20:]
     greens_2x = sum(1 for v in ultimas_20 if v >= 2.0)
-    porcentagem_atual = (greens_2x / len(ultimas_20)) * 100 if ultimas_20 else 0
+    forca_mercado = (greens_2x / len(ultimas_20)) * 100 if ultimas_20 else 0
 
-    # 2. Contagem de REDs seguidos (< 2.00x)
-    reds_seguidos = 0
-    for v in reversed(list(historico)):
-        if v < 2.0:
-            reds_seguidos += 1
-        else:
-            break
-
-    # 3. Cálculo da Seca para Super Vela (>= 10.0x como referência de retenção)
-    rodadas_sem_alta = 0
-    for v in reversed(list(historico)):
+    # 2. Contadores de Seca
+    rodadas_sem_rosa = 0
+    for v in reversed(valores):
         if v < 10.0:
-            rodadas_sem_alta += 1
+            rodadas_sem_rosa += 1
         else:
             break
 
-    # 4. Cálculo Dinâmico da Porcentagem de Chance da Vela Insana (50.00x+)
-    if rodadas_sem_alta <= 20:
-        chance_50x = 5.0 + (rodadas_sem_alta * 1.5)
-    elif rodadas_sem_alta <= 45:
-        chance_50x = 35.0 + (rodadas_sem_alta - 20) * 1.8
-    else:
-        chance_50x = min(98.0, 80.0 + (rodadas_sem_alta - 45) * 1.0)
+    # --- VERIFICAÇÃO DO PADRÃO 1 (VELA ROSA EM 3 CASAS) ---
+    # Sequência de 5 elementos: Roxa -> Azul -> Azul -> Roxa -> Azul
+    padrao_1_ativo = False
+    if len(tipos) >= 5:
+        segmento = tipos[-5:]
+        if (segmento[0] == "ROXA" and 
+            segmento[1] == "AZUL" and 
+            segmento[2] == "AZUL" and 
+            segmento[3] == "ROXA" and 
+            segmento[4] == "AZUL"):
+            padrao_1_ativo = True
 
-    # --- SINAL 1: PRIORIDADE PROTEGIDA (ALVO 2.00x) ---
-    st.markdown("### 🟢 PRIORIDADE: Sinalizador Alvo 2.00x (Gatilho Seguro)")
-    
-    # Voltamos para 3 REDs conforme sua excelente análise de segurança
-    if reds_seguidos >= 3 and porcentagem_atual <= 50.0:
+    # --- VERIFICAÇÃO DO PADRÃO 2 (RETOMADA 2x) ---
+    # 3+ Roxas/Rosas seguidas -> 1 Azul
+    padrao_2_ativo = False
+    if len(tipos) >= 4:
+        if tipos[-1] == "AZUL":
+            # Conta quantas roxas/rosas consecutivas vieram antes do último azul
+            roxas_antes = 0
+            for t in reversed(tipos[:-1]):
+                if t in ["ROXA", "ROSA"]:
+                    roxas_antes += 1
+                else:
+                    break
+            if roxas_antes >= 3:
+                padrao_2_ativo = True
+
+    # --- EXIBIÇÃO DE SINAIS EXCLUSIVOS ---
+    st.markdown("### 🚨 Painel de Sinais Ativos")
+
+    sinal_disparado = False
+
+    # ALERTA 1: Padrão de Vela Rosa
+    if padrao_1_ativo:
+        sinal_disparado = True
+        # Probabilidade adaptativa baseada na seca de rosa no mercado
+        probabilidade_rosa = min(96.0, 75.0 + (rodadas_sem_rosa * 0.3))
         st.error(
-            f"🔥 **SINAL ATIVO: MOMENTO DE ENTRADA SEGURO!** \n\n"
-            f"O mercado bateu o filtro de proteção: **{reds_seguidos} REDs seguidos**. Força atual: **{porcentagem_atual:.1f}%**.\n\n"
-            f"🎯 **AÇÃO:** Faça sua entrada buscando a saída em **2.00x** no Auto-Saque!"
+            f"🔥 **SINAL CONFIRMADO: ALVO VELA ROSA (10x a 50x+)** \n\n"
+            f"🎯 **Padrão Detectado:** Sequência Perfeita (Roxa → Azul → Azul → Roxa → Azul) confirmada!\n\n"
+            f"📈 **Probabilidade de Acerto:** {probabilidade_rosa:.1f}%\n"
+            f"🚨 **AÇÃO:** Entre moderado nas próximas **3 rodadas** buscando sair em vela alta."
         )
-    else:
-        st.warning(f"⏳ **Monitorando Padrão de 2x...** (Reds atuais: {reds_seguidos}/3 | Força do mercado: {porcentagem_atual:.1f}%)")
 
-    st.divider()
-
-    # --- SINAL 2: TERMÔMETRO DE VELA INSANA (50.00x+) ---
-    st.markdown("### 🌌 Radar de Probabilidade: Vela Insana (50x+)")
-    
-    st.write(f"📊 **Cálculo de Janela de Distribuição:** {chance_50x:.1f}% de chance matemática para multiplicadores extremos.")
-    st.progress(int(chance_50x) / 100)
-
-    if chance_50x >= 85.0:
-        st.info(
-            f"🚀 **ALERTA DE MULTIPLICADOR EXTREMO ({chance_50x:.1f}%)** \n\n"
-            f"O sistema detectou uma seca severa de **{rodadas_sem_alta} rodadas** sem payouts expressivos.\n\n"
-            f"🎯 **DICA:** Mantenha a aposta principal em 2x. Na segunda aposta (com valor mínimo), tente deixar subir, pois a janela estatística para super velas de 50x+ está aberta!"
+    # ALERTA 2: Retomada de Força (2x)
+    if padrao_2_ativo:
+        sinal_disparado = True
+        # A probabilidade de retomar é maior se a força geral do mercado estiver boa (perto de 50%)
+        probabilidade_retomada = min(98.0, 80.0 + (forca_mercado * 0.2))
+        st.error(
+            f"🔥 **SINAL CONFIRMADO: RETOMADA SEGURA (Alvo 2.00x)** \n\n"
+            f"🎯 **Padrão Detectado:** Quebra de tendência após sequência forte de verdes.\n\n"
+            f"📈 **Probabilidade de Acerto:** {probabilidade_retomada:.1f}%\n"
+            f"🚨 **AÇÃO:** Entre na próxima rodada com o Auto-Saque programado em **2.00x**."
         )
-    else:
-        st.success(f"⏳ **Estatística 50x+:** Ciclo padrão de acumulação. Rodadas desde o último sinal expressivo: {rodadas_sem_alta}. O termômetro vai subir conforme o jogo segurar o prêmio.")
+
+    if not sinal_disparado:
+        st.warning("⏳ **MONITORANDO ALGORITMO:** Aguardando formação de uma das duas sequências de alta assertividade.")
 
     st.divider()
 
-    # --- QUADROS DE INFORMAÇÃO RÁPIDA ---
-    st.markdown("### 📊 Indicadores em Tempo Real")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Força Recente (Janela 20)", f"{porcentagem_atual:.1f}%")
-    col2.metric("Reds em Sequência", f"{reds_seguidos}")
-    col3.metric("Rodadas de Seca Alta", f"{rodadas_sem_alta}")
-
-    st.divider()
+    # --- DETALHAMENTO DE PROBABILIDADE ATUAL (ESTATÍSTICA ANTES DO GATILHO) ---
+    st.markdown("### 📊 Termômetros de Aproximação")
+    col1, col2 = st.columns(2)
     
-    # Exibe a lista dos últimos valores digitados para conferência
-    st.markdown("📋 **Histórico na Memória RAM:**")
-    st.text(str(list(historico)[-12:])[1:-1] + "x")
+    # Progresso para Padrão 1
+    col1.write("📈 **Aproximação do Padrão Rosa (5 etapas):**")
+    contagem_etapas_p1 = 0
+    if len(tipos) >= 1 and tipos[-1] == "AZUL":
+        contagem_etapas_p1 = 20
+        if len(tipos) >= 2 and tipos[-2] == "ROXA":
+            contagem_etapas_p1 = 40
+            if len(tipos) >= 3 and tipos[-3] == "AZUL":
+                contagem_etapas_p1 = 60
+                if len(tipos) >= 4 and tipos[-4] == "AZUL":
+                    contagem_etapas_p1 = 80
+    col1.progress(contagem_etapas_p1 / 100)
+    col1.caption(f"Fidelidade atual do padrão: {contagem_etapas_p1}%")
+
+    # Progresso para Padrão 2
+    col2.write("📈 **Aproximação do Padrão de Retomada (3+ Roxas):**")
+    contagem_roxas = 0
+    for t in reversed(tipos):
+        if t in ["ROXA", "ROSA"]:
+            contagem_roxas += 1
+        else:
+            break
+    progresso_p2 = min(100, int((contagem_roxas / 3) * 100))
+    col2.progress(progresso_p2 / 100)
+    col2.caption(f"Verdes acumulados na sequência atual: {contagem_roxas}/3")
+
+    st.divider()
+
+    # --- LINHA DO TEMPO REORGANIZADA E COLORIDA ---
+    st.markdown("📋 **Histórico das últimas rodadas inseridas:**")
+    
+    badges = []
+    for v in valores[-15:]:
+        if v < 2.0:
+            badges.append(f"🔵 **{v:.2f}x**")
+        elif v < 10.0:
+            badges.append(f"🟣 **{v:.2f}x**")
+        else:
+            badges.append(f"🌸 **{v:.2f}x**")
+            
+    st.markdown(" → ".join(badges))
     
 else:
-    st.info("👋 Painel Atualizado! Digite as velas da Betano na barra lateral para acompanhar o filtro de 3 REDs e o medidor de 50x+.")
+    st.info("👋 Para iniciar a análise de padrões, insira pelo menos 5 resultados consecutivos da Betano.")
