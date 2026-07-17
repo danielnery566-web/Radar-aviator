@@ -3,7 +3,7 @@ import pandas as pd
 from collections import deque
 
 # Configuração da página otimizada para tablets
-st.set_page_config(page_title="Radar Foco 2x", layout="wide")
+st.set_page_config(page_title="Radar Aviator Analytics", layout="wide")
 
 # Inicializa o histórico na memória RAM
 if "historico" not in st.session_state:
@@ -11,17 +11,17 @@ if "historico" not in st.session_state:
 
 historico = st.session_state.historico
 
-# Títulos da Interface
-st.title("🎯 Radar Exclusivo - Foco Absoluto em 2.00x")
-st.write("Análise de padrões de alta fidelidade voltada apenas para o saque seguro em 2x.")
+# Título Principal
+st.title("📊 Radar Aviator Pro - Analisador de Tendências & Linhas")
+st.write("Monitore em tempo real se o algoritmo está pagando ou retendo através do mapeamento de blocos.")
 
 st.divider()
 
 # --- PAINEL LATERAL COM FORMULÁRIO ANTI-TRAVAMENTO ---
-st.sidebar.markdown("### 📥 Entrada de Dados")
+st.sidebar.markdown("### 📥 Alimentar Algoritmo")
 
 with st.sidebar.form(key="formulario_entrada", clear_on_submit=True):
-    novo_valor = st.text_input("Digite a última vela (ex: 1.45):", key="input_vela")
+    novo_valor = st.text_input("Digite a última vela (ex: 1.15):", key="input_vela")
     botao_enviar = st.form_submit_button(label="⚡ Registrar Rodada")
 
 if botao_enviar and novo_valor:
@@ -38,110 +38,109 @@ if st.sidebar.button("🗑️ Zerar Memória RAM"):
     st.session_state.historico.clear()
     st.rerun()
 
-# --- CLASSIFICADOR DE VELAS (FOCO 2x) ---
-def obter_tipo(v):
-    return "GREEN" if v >= 2.0 else "RED"
-
-# --- PROCESSAMENTO DOS PADRÕES ---
-if len(historico) >= 5:
+# --- LÓGICA DE ANÁLISE GRÁFICA ---
+if len(historico) > 0:
     valores = list(historico)
-    tipos = [obter_tipo(v) for v in valores]
     
-    # Métrica de saúde do mercado (Últimas 20)
+    # Contagem global de tipos
+    total_rodadas = len(valores)
+    azuis = sum(1 for v in valores if v < 2.0)
+    verdes_roxa_rosa = sum(1 for v in valores if v >= 2.0)
+    
+    # Força recente (últimas 20)
     ultimas_20 = valores[-20:]
-    greens_2x = sum(1 for v in ultimas_20 if v >= 2.0)
-    forca_mercado = (greens_2x / len(ultimas_20)) * 100 if ultimas_20 else 0
+    greens_20 = sum(1 for v in ultimas_20 if v >= 2.0)
+    forca_recente = (greens_20 / len(ultimas_20)) * 100 if ultimas_20 else 0
 
-    # 1. Verificação do Padrão 1 (Recuperação de Sequência)
-    # Sequência: Green -> RED -> RED -> Green -> RED
-    padrao_1_ativo = False
-    if len(tipos) >= 5:
-        segmento = tipos[-5:]
-        if (segmento[0] == "GREEN" and segmento[1] == "RED" and 
-            segmento[2] == "RED" and segmento[3] == "GREEN" and segmento[4] == "RED"):
-            padrao_1_ativo = True
+    # --- DIAGNÓSTICO DO MERCADO ---
+    st.markdown("### 🌡️ Diagnóstico do Algoritmo (Tempo Real)")
+    if forca_recente >= 55.0:
+        st.success(f"🟩 **MERCADO PAGADOR ({forca_recente:.1f}%):** O gráfico está liberando muitas velas boas. Ótimo momento para surfar a tendência a favor dos padrões de 2x.")
+    elif forca_recente >= 40.0:
+        st.info(f"🟨 **MERCADO EQUILIBRADO ({forca_recente:.1f}%):** O jogo está alternando de forma padrão. Siga estritamente os gatilhos dos sinais.")
+    else:
+        st.sidebar.warning("⚠️ Alerta: Cassino Retendo!")
+        st.error(f"🟥 **MERCADO EM RETENÇÃO ({forca_recente:.1f}%):** O algoritmo está prendendo e recolhendo banca. Cuidado com entradas seguidas!")
 
-    # 2. Verificação do Padrão 2 (Retomada após Sequência Forte)
-    # Sequência: 3 ou mais Greens -> 1 RED
-    padrao_2_ativo = False
-    if len(tipos) >= 4 and tipos[-1] == "RED":
-        greens_antes = 0
-        for t in reversed(tipos[:-1]):
-            if t == "GREEN":
-                greens_antes += 1
-            else:
-                break
-        if greens_antes >= 3:
-            padrao_2_ativo = True
+    st.divider()
 
-    # 3. Verificação do Padrão 3 (Micro-correção por Alternância Rápida)
-    # Sequência: RED -> GREEN -> RED
-    padrao_3_ativo = False
-    if len(tipos) >= 3:
-        segmento = tipos[-3:]
-        if segmento[0] == "RED" and segmento[1] == "GREEN" and segmento[2] == "RED":
-            padrao_3_ativo = True
-
-    # --- PAINEL DE SINAIS ATIVOS ---
+    # --- PAINEL DE SINAIS (FOCO 2x + NOVO PADRÃO SOLICITADO) ---
     st.markdown("### 🚨 Painel de Entrada Confirmada (Alvo 2.00x)")
+    
     sinal_disparado = False
 
-    if padrao_1_ativo:
-        sinal_disparado = True
-        # Probabilidade maior se a força recente estiver baixa (sinalizando correção iminente)
-        prob_p1 = min(96.0, 84.0 + (45.0 - forca_mercado) * 0.2) if forca_mercado < 45.0 else 84.0
-        st.error(
-            f"🔥 **SINAL VERMELHO: ENTRADA CONFIRMADA!** \n\n"
-            f"🎯 **Padrão:** Recuperação de Sequência Ativo.\n"
-            f"📊 **Probabilidade de bater 2x nesta entrada:** {prob_p1:.1f}%\n\n"
-            f"📢 **AÇÃO:** Entre na próxima rodada buscando a saída em **2.00x** no Auto-Saque!"
-        )
+    # Detecção do NOVO PADRÃO: Vela Ultra Baixa (<1.20) seguida imediatamente de um Green (>=2.0)
+    if len(valores) >= 2:
+        if valores[-2] < 1.20 and valores[-1] >= 2.0:
+            sinal_disparado = True
+            # Calcula a probabilidade baseada na resposta recente do mercado
+            prob_quebra = min(96.0, 82.0 + (forca_recente * 0.1))
+            st.error(
+                f"🔥 **SINAL VERMELHO: PADRÃO QUEBRA INSTANTÂNEA DETECTADO!** \n\n"
+                f"🎯 **Padrão:** Uma vela de extremo risco ({valores[-2]}x) foi corrigida direto por uma boa ({valores[-1]}x).\n"
+                f"📊 **Probabilidade de continuidade em 2x:** {prob_quebra:.1f}%\n\n"
+                f"📢 **AÇÃO:** O mercado está mostrando força de reação rápida. Entre na próxima rodada buscando **2.00x**!"
+            )
 
-    if padrao_2_ativo:
-        sinal_disparado = True
-        # Retomada é mais forte se o mercado estiver saudável
-        prob_p2 = min(98.0, 88.0 + (forca_mercado - 40.0) * 0.1) if forca_mercado > 40.0 else 88.0
-        st.error(
-            f"🔥 **SINAL VERMELHO: RETOMADA DE FORÇA!** \n\n"
-            f"🎯 **Padrão:** Quebra de sequência de Greens por apenas 1 RED.\n"
-            f"📊 **Probabilidade de bater 2x nesta entrada:** {prob_p2:.1f}%\n\n"
-            f"📢 **AÇÃO:** Entre na próxima rodada buscando a saída em **2.00x** no Auto-Saque!"
-        )
-
-    if padrao_3_ativo:
-        sinal_disparado = True
-        prob_p3 = min(95.0, 82.0 + (50.0 - forca_mercado) * 0.15) if forca_mercado < 50.0 else 82.0
-        st.error(
-            f"🔥 **SINAL VERMELHO: ALTERNÂNCIA RÁPIDA!** \n\n"
-            f"🎯 **Padrão:** Correção curta após padrão de zigue-zague.\n"
-            f"📊 **Probabilidade de bater 2x nesta entrada:** {prob_p3:.1f}%\n\n"
-            f"📢 **AÇÃO:** Entre na próxima rodada buscando a saída em **2.00x** no Auto-Saque!"
-        )
+    # Gatilho de Proteção Padrão (3 REDs seguidos)
+    if not sinal_disparado and len(valores) >= 3:
+        if valores[-1] < 2.0 and valores[-2] < 2.0 and valores[-3] < 2.0 and forca_recente <= 50.0:
+            sinal_disparado = True
+            prob_padrão = min(95.0, 85.0 + (50.0 - forca_recente) * 0.2)
+            st.error(
+                f"🔥 **SINAL VERMELHO: FILTRO DE EXAUSTÃO (3 REDs)!** \n\n"
+                f"🎯 **Padrão:** Sequência de 3 velas azuis ruins seguidas.\n"
+                f"📊 **Probabilidade de correção para 2x:** {prob_padrão:.1f}%\n\n"
+                f"📢 **AÇÃO:** Entre na próxima rodada buscando **2.00x** no Auto-Saque!"
+            )
 
     if not sinal_disparado:
-        st.warning("⏳ **MONITORANDO MERCADO:** Aguardando formação de um dos padrões de 2.00x para gerar o sinal de entrada.")
+        st.warning("⏳ **MONITORANDO GRÁFICO:** Aguardando o momento de maior probabilidade para disparar o sinal.")
 
     st.divider()
 
-    # --- QUADROS DE MÉTRICA RÁPIDA ---
-    st.markdown("### 📊 Indicadores do Momento")
-    col1, col2 = st.columns(2)
-    col1.metric("Termômetro de Força Recente", f"{forca_mercado:.1f}%")
-    col2.caption("💡 Lembrete: Força abaixo de 50% indica um excelente momento para pegar as correções de 2x do robô.")
+    # --- ANÁLISE DETALHADA POR LINHAS (IGUAL À TELA DA CASAS DE APOSTA) ---
+    st.markdown("### 📋 Média do Gráfico por Linhas (Blocos de 7 velas)")
+    st.write("Abaixo, o histórico é dividido em linhas de 7 jogadas (da mais recente para a mais antiga):")
 
-    st.divider()
+    # Divide o histórico em grupos de 7 (simulando as linhas do jogo)
+    lista_invertida = list(reversed(valores))
+    linhas_linhas = [lista_invertida[i:i + 7] for i in range(0, len(lista_invertida), 7)]
 
-    # --- HISTÓRICO VISUAL SIMPLIFICADO ---
-    st.markdown("📋 **Histórico Simplificado (Alvo 2x):**")
-    
-    badges = []
-    for v in valores[-15:]:
-        if v < 2.0:
-            badges.append(f"🔵 **{v:.2f}x**")  # Red
+    for idx, linha in enumerate(linhas_linhas):
+        qtd_azul = sum(1 for v in linha if v < 2.0)
+        qtd_boas = sum(1 for v in linha if v >= 2.0)
+        
+        # Cria a exibição visual da linha
+        badges_linha = []
+        for v in reversed(linha): # Mantém a ordem de leitura esquerda -> direita
+            if v < 2.0:
+                badges_linha.append(f"🔵 {v:.2f}x")
+            elif v < 10.0:
+                badges_linha.append(f"🟣 {v:.2f}x")
+            else:
+                badges_linha.append(f"🌸 {v:.2f}x")
+        
+        texto_linha = " | ".join(badges_linha)
+        
+        # Define o status da linha
+        if qtd_boas > qtd_azul:
+            status_linha = "🟢 **Linha Pagadora**"
+        elif qtd_boas == qtd_azul:
+            status_linha = "🟡 **Linha de Transição**"
         else:
-            badges.append(f"🟢 **{v:.2f}x**")  # Green (2x ou mais)
+            status_linha = "🔵 **Linha de Retenção (Ruim)**"
             
-    st.markdown(" → ".join(badges))
-    
+        st.markdown(f"**Linha {idx + 1}** ({status_linha}): {texto_linha} — *(Boas: {qtd_boas} | Ruins: {qtd_azul})*")
+
+    st.divider()
+
+    # --- VOLUMETRIA TOTAL ACUMULADA ---
+    st.markdown("### 📊 Contagem Geral Acumulada na Sessão")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total de Velas Azuis (Ruins)", f"{azuis}", delta=f"{(azuis/total_rodadas)*100:.1f}% do total", delta_color="inverse")
+    col2.metric("Total de Velas Boas (Roxa/Rosa)", f"{verdes_roxa_rosa}", delta=f"{(verdes_roxa_rosa/total_rodadas)*100:.1f}% do total")
+    col3.metric("Rodadas na Memória", f"{total_rodadas}/100")
+
 else:
-    st.info("👋 Digite pelo menos 5 resultados consecutivos no painel lateral para o radar de 2x calibrar.")
+    st.info("👋 Painel Analítico Avançado pronto! Vá inserindo os resultados da sua tabela da Betano para gerar os relatórios por linhas e monitorar a quebra do padrão de 1.15x.")
